@@ -7,11 +7,11 @@
     
     <!-- NuGet Package Metadata -->
     <PackageId>SimpleMediatorLib</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.2</Version>
     <Authors>Mahdi Karami</Authors>
     <Description>A simple, lightweight mediator pattern implementation for .NET with support for request/response handlers, notifications, and pipeline behaviors.</Description>
     <PackageTags>mediator;cqs;cqrs;request;response;notification;pipeline;behavior</PackageTags>
-    <RepositoryUrl>https://github.com/mkaramidarabi/SimpleMediator</RepositoryUrl>
+    <RepositoryUrl>https://github.com/mkaramidarabi/SimpleMediatorLib</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -22,8 +22,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="[6.0.0,9.0.0)" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
   </ItemGroup>
+
+  <!-- Modify nuspec to allow future versions of dependencies -->
+  <Target Name="ModifyNuspecDependencies" AfterTargets="Pack">
+    <PropertyGroup>
+      <_PackagePath>$(MSBuildProjectDirectory)/bin/$(Configuration)/$(PackageId).$(PackageVersion).nupkg</_PackagePath>
+      <_TempDir>$(IntermediateOutputPath)nuspec_temp</_TempDir>
+      <_NuspecFile>$(_TempDir)/$(PackageId).nuspec</_NuspecFile>
+    </PropertyGroup>
+    <MakeDir Directories="$(_TempDir)" Condition="Exists('$(_PackagePath)')" />
+    <Exec Command="cd $(_TempDir) &amp;&amp; unzip -q -o &quot;$(_PackagePath)&quot; $(PackageId).nuspec" Condition="Exists('$(_PackagePath)')" />
+    <Exec Command="sed -i '' 's/version=&quot;6.0.0&quot;/version=&quot;[6.0.0,)&quot;/g' $(_NuspecFile)" Condition="Exists('$(_NuspecFile)')" />
+    <Exec Command="cd $(_TempDir) &amp;&amp; zip -q &quot;$(_PackagePath)&quot; $(PackageId).nuspec" Condition="Exists('$(_NuspecFile)')" />
+    <RemoveDir Directories="$(_TempDir)" />
+  </Target>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
